@@ -92,12 +92,12 @@ Once an anchor `A_r` is committed, its uncommitted causal history forms a DAG se
 #### Academic Reference
 If you use or reference **Proof of Invariant (PoI)**, please cite the project:
 ```bibtex
-@misc{shvets2026poi,
-  author       = {Shvets, Oleksandr A.},
-  title        = {{Proof of Invariant (PoI): Structural Invariant Verification in Causal DAG Ledgers}},
-  year         = {2026},
-  howpublished = {\url{https://github.com/ugodai/invariant}},
-  note         = {Technical specification}
+@techreport{shvets2026poi,
+  author      = {Shvets, Oleksandr A.},
+  type        = {Cryptographic Protocol Specification},
+  title       = {{Proof of Invariant (PoI): Structural Invariant Verification in Causal DAG Ledgers}},
+  year        = {2026},
+  url         = {https://github.com/ugodai/invariant}
 }
 ```
 Repository: <https://github.com/ugodai/invariant>
