@@ -50,46 +50,105 @@
 
 ### Key Architectural Pillars
 
-* **Causal Delta Graph (Causal DAG):** Transactions and state updates are submitted as content-addressed *deltas*     
-  `d = \langle \text{ChainID}, r, h, P(d), \text{seq}, \text{payload}, \sigma \rangle`      
-  referencing prior parents, forming a directed acyclic graph.
-* **Inductive Topological Safety:** Graph acyclicity is guaranteed through content-addressed parent references `P(d)`, explicit self-parent chain rules, and strict round-height progression.
-* **Equivocation Guard:** An `O(1)` sequence-indexed guard tracks validator activity and detects multi-branch double-signing attempts without graph traversal overhead.
-* **Anchor-Based Segment Ordering:** A deterministic round-and-anchor ordering scheme (extending DAG-based consensus models) establishes global linear sequence across asynchronous views.
-* **Future-Beacon Salting:** Per-round future beacons salt transaction identifiers during canonical sorting to neutralize proposer grinding and ordering manipulation.
-
+1. **Causal Delta Graph (Causal DAG)**    
+    Transactions and state updates are submitted as content-addressed deltas:
+    ```
+    d = <ChainID, r, h, P(d), seq, payload, sigma>
+    ```
+    Each delta references its prior parents, forming a directed acyclic graph (DAG).
+2. **Inductive Topological Safety**    
+    Graph acyclicity is guaranteed through content-addressed parent references `(P(d))`, explicit self-parent chain rules, and strict round-height progression.
+3. **Equivocation Guard**    
+    An `O(1)` sequence-indexed guard tracks validator activity and detects multi-branch double-signing attempts without graph traversal overhead.
+4. **Anchor-Based Segment Ordering**     
+    A deterministic round-and-anchor ordering scheme establishes a global linear sequence across asynchronous views.
+5. **Future-Beacon Salting**     
+    Per-round future beacons salt transaction identifiers during canonical sorting to neutralize proposer grinding and ordering manipulation.
 
 ## Protocol Mechanics (How PoI Works)
 
-PoI processes, orders, and finalizes state transitions through five sequential phases:
+PoI processes, orders, and finalizes state transitions through five sequential phases.
 
-### 1. Invariant & Delta Verification
-When a node receives a delta `d` from validator `v_i`, it recomputes all structural fields before insertion:
-* **Self-Chain Rule:** `P(d)` must contain exactly one self-parent `s(d)` signed by `v_i`, where `\text{seq}(d) = \text{seq}(s(d)) + 1` and `r(d) > r(s(d))`.
-* **Round & Quorum Rule:** `r(d) = 1 + \max_{p \in P(d)} r(p)`, requiring `P(d)` to include parent deltas from at least `Q` distinct signers at round `r(d) - 1`.
-* **Height Rule:** `h(d) = 1 + \max_{p \in P(d)} h(p)`.
+#### 1. Invariant and Delta Verification
 
-### 2. `O(1)` Equivocation Tracking & Ejection
-To detect validators issuing conflicting deltas (double-signing):
-* Nodes maintain an in-memory index `I: (\text{ValidatorID}, \text{seq}) \to \text{DeltaID}`.
-* If `I(v_i, \text{seq})` already holds a different hash for the same sequence number (`\text{DeltaID}(d_a) \neq \text{DeltaID}(d_b)`), both signed deltas are retained as cryptographic evidence, triggering immediate validator role ejection.
-* **Committed-Head Pruning:** To maintain bounded memory, index entries behind the latest committed checkpoint sequence (`\text{seq}_c`) are safely pruned.
+When a node receives a delta d from validator `v_i`, it recomputes all structural fields before insertion.
 
-### 3. Anchor Selection & Direct Commit
-* Each round `r` designates a deterministic anchor candidate slot: `\text{slot}(r) = r \pmod N`.
-* An anchor `A_r` is **directly committed** when at least `f + 1` deltas in round `r+1` explicitly include `A_r` in their causal history.
-* Unreferenced or uncommitted anchors are deterministically derived as skipped without requiring additional network consensus rounds.
+##### Self-Chain Rule
 
-### 4. Canonical Sorting & Future-Beacon Salting
-Once an anchor `A_r` is committed, its uncommitted causal history forms a DAG segment:
-1. **Topological Extraction:** The segment's deltas are extracted in causal DAG order.
-2. **Salted Sorting:** Within identical heights, deltas are ordered by `\text{Hash}(\text{DeltaID} \parallel \text{Beacon}_{r})`, where `\text{Beacon}_{r}` is a round-indexed future beacon. This prevents malicious proposers from grinding hashes to manipulate transaction priority.
+`P(d)` must contain exactly one self-parent `s(d)` signed by `v_i`, satisfying:
+```
+seq(d) = seq(s(d)) + 1
+r(d) > r(s(d))
+```
+##### Round and Quorum Rule
 
-### 5. Deterministic Execution & Conditional Finality
-* Nodes execute the linear sequence deterministically:      
-  `S_{t+1} = \text{Execute}(\text{Canonicalize}(\mathcal{D}), S_t)`.
-* **Conflict Resolution:** In the event of conflicting transactions or double-spend attempts, state transitions are processed in exact canonical sequence; conflicting later transactions trigger explicit execution reverts (`STATUS_REVERTED`).
-* **Checkpointing:** Periodic quorum-signed checkpoint certificates over committed anchors freeze historical execution prefixes, guaranteeing conditional finality.
+The round of a delta is defined as:
+```
+r(d) = 1 + max(r(p) for p in P(d))
+```
+Additionally, `P(d)` must include parent deltas from at least `Q` distinct signers at round `r(d) - 1`.
+
+##### Height Rule
+
+The height of a delta is defined as:
+```
+h(d) = 1 + max(h(p) for p in P(d))
+```
+#### 2. `O(1)` Equivocation Tracking and Ejection
+
+To detect validators issuing conflicting deltas (double-signing), nodes maintain an in-memory index:
+```
+I: (ValidatorID, seq) -> DeltaID
+```
+If `I(v_i, seq)` already holds a different hash for the same sequence number, such that:
+```
+DeltaID(d_a) != DeltaID(d_b)
+```
+both signed deltas are retained as cryptographic evidence, triggering immediate validator role ejection.
+
+##### Committed-Head Pruning
+
+To maintain bounded memory, index entries behind the latest committed checkpoint sequence seq_c are safely pruned.
+
+#### 3. Anchor Selection and Direct Commit
+
+Each round r designates a deterministic anchor candidate slot:
+```
+slot(r) = r mod N
+```
+An anchor `A_r` is directly committed when at least `f + 1` deltas in round `r + 1` explicitly include `A_r` in their causal history.
+
+Unreferenced or uncommitted anchors are deterministically derived as skipped, without requiring additional network consensus rounds.
+
+#### 4. Canonical Sorting and Future-Beacon Salting
+
+Once an anchor `A_r` is committed, its uncommitted causal history forms a DAG segment.
+
+##### Topological Extraction
+
+The segment’s deltas are extracted in causal DAG order.
+
+##### Salted Sorting
+
+Within identical heights, deltas are ordered by:
+```
+Hash(DeltaID || Beacon_r)
+```
+Here, Beacon_r is a round-indexed future beacon.
+
+This prevents malicious proposers from grinding hashes to manipulate transaction priority.
+
+#### 5. Deterministic Execution and Conditional Finality
+
+Nodes execute the linear sequence deterministically:
+```
+S_(t+1) = Execute(Canonicalize(D), S_t)
+```
+##### Conflict Resolution
+In the event of conflicting transactions or double-spend attempts, state transitions are processed in the exact canonical sequence. Conflicting later transactions trigger explicit execution reverts (`STATUS_REVERTED`).
+
+##### Checkpointing
+Periodic quorum-signed checkpoint certificates over committed anchors freeze historical execution prefixes, guaranteeing conditional finality.
 
 ## Citation
 #### Academic Reference
