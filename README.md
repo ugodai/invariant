@@ -15,34 +15,57 @@
 
 **Proof of Invariant (PoI)** decouples topological graph admissibility and causal validation from state execution. Rather than relying on heavy global consensus rounds, PoI enforces structural rules at the graph level, enabling concurrent transaction submission with deterministic state convergence.
 
-```text
-                     +-----------------------+
-                     |  Validator Proposals  |
-                     +-----------+-----------+
-                                 |
-                                 v
-                     +-----------------------+
-                     |  Inductive DAG Rules  |
-                     | (Parent Closure, Seq) |
-                     +-----------+-----------+
-                                 |
-                                 v
-                     +-----------------------+
-                     | Equivocation Tracker  |
-                     |   O(1) Sequence Guard |
-                     +-----------+-----------+
-                                 |
-                                 v
-                     +-----------------------+
-                     |   Anchor Commitment   |
-                     |  & Future Beacon Salt |
-                     +-----------+-----------+
-                                 |
-                                 v
-                     +-----------------------+
-                     | Deterministic State   |
-                     |   S = Execute(D, S0)  |
-                     +-----------------------+
+```
+┌─────────────────────────────┐
+│      Validator Proposals    │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│     Inductive DAG Rules     │
+│ Parent Closure · Sequences  │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│     Equivocation Tracker    │
+│     O(1) Sequence Guard     │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│      Anchor Commitment      │
+│     Future Beacon Salt      │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│     Deterministic State     │
+│       S = Execute(D, S₀)    │
+└─────────────────────────────┘
+```
+```mermaid
+flowchart TD
+    A["Validator Proposals"]
+    B["Inductive DAG Validation<br/>Parent Closure · Sequence Constraints"]
+    C["Equivocation Detection<br/>O(1) Sequence Guard"]
+    D["Anchor Commitment<br/>Future Beacon Salt"]
+    E["Deterministic State Transition<br/>S = Execute(D, S₀)"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+
+    classDef input fill:#e8f0fe,stroke:#4c78a8,color:#172b4d
+    classDef validation fill:#fff3cd,stroke:#b8860b,color:#4a3500
+    classDef commitment fill:#e8f5e9,stroke:#388e3c,color:#1b4332
+    classDef output fill:#f3e8ff,stroke:#8e44ad,color:#3b1f52
+
+    class A input
+    class B,C validation
+    class D commitment
+    class E output
 ```
 
 ### Key Architectural Pillars
@@ -59,6 +82,17 @@
 ## Protocol Mechanics (How PoI Works)
 
 PoI processes, orders, and finalizes state transitions through five sequential phases:
+
+```mermaid
+flowchart TD
+    A["1. Delta Verification<br/>Structural Invariants"]
+    B["2. Equivocation Tracking<br/>Sequence-Indexed Guard"]
+    C["3. Anchor Selection<br/>Direct Commit"]
+    D["4. Canonical Ordering<br/>Topological Extraction + Beacon Salt"]
+    E["5. Deterministic Execution<br/>State Transition + Checkpointing"]
+
+    A --> B --> C --> D --> E
+```
 
 ### 1. Invariant & Delta Verification
 When a node receives a delta `d` from validator `v_i`, it recomputes all structural fields before insertion:
@@ -89,18 +123,19 @@ Once an anchor `A_r` is committed, its uncommitted causal history forms a DAG se
 * **Checkpointing:** Periodic quorum-signed checkpoint certificates over committed anchors freeze historical execution prefixes, guaranteeing conditional finality.
 
 ## Citation
+### Academic Reference
+If you use or reference PoI, please cite the project:
 
-Academic Reference:
 ```bibtex
 @misc{shvets2026poi,
-  author = {Oleksandr A. Shvets},
-  title = {Proof of Invariant (PoI): Structural Invariant Verification in Causal DAG Ledgers},
-  year = {2026},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/ugodai/invariant}}
+  author       = {Shvets, Oleksandr A.},
+  title        = {{Proof of Invariant (PoI): Structural Invariant Verification in Causal DAG Ledgers}},
+  year         = {2026},
+  howpublished = {\url{https://github.com/ugodai/invariant}},
+  note         = {Technical specification}
 }
 ```
+Repository: <https://github.com/ugodai/invariant>
 
 ## License
 
