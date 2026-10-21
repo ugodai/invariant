@@ -1,10 +1,9 @@
 # Invariant Verification
 **An invariant** is a formally defined property or relationship that must remain valid under the permitted operations of a system.    
-**Proof of Invariant (PoI)** is a protocol architecture for verifying Structural Invariants in Distributed Ledgers based on Directed Acyclic Graphs (causal DAGs), that:
- * detecting double-signing (equivocation)
- * ensuring deterministic ordering
- * and conditional finality   
-of the Distributed Ledger.
+**Proof of Invariant (PoI)** is a protocol architecture for verifying Structural Invariants in Distributed Ledgers based on Directed Acyclic Graphs (causal DAGs). It is designed to enable:
+* **Equivocation detection**: detecting double-signing by the same validator.
+* **Deterministic ordering**: establishing a deterministic order for ledger events.
+* **Conditional finality**: establishing finality when explicitly defined protocol conditions are satisfied.
 
 ## Table of Contents
 - [Core Architecture](#core-architecture)
