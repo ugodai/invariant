@@ -158,7 +158,7 @@ If you use or reference **Proof of Invariant (PoI)**, please cite the project:
 @techreport{shvets2026poi,
   author      = {Shvets, Oleksandr A.},
   type        = {Cryptographic Protocol Specification},
-  title       = {{Proof of Invariant (PoI): Structural Invariant Verification in Causal DAG Ledgers}},
+  title       = {Proof of Invariant (PoI): Structural Invariant Verification in Causal DAG Ledgers},
   year        = {2026},
   url         = {https://github.com/ugodai/invariant}
 }
