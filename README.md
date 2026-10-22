@@ -165,6 +165,9 @@ If you use or reference **Proof of Invariant (PoI)**, please cite the project:
 Repository: <https://github.com/ugodai/invariant>
 
 ## License
+#### Code License
+All code associated with this work will be released under the **Apache License, Version 2.0**.
 
-Copyright © 2026 Oleksandr A. Shvets   
-This draft paper is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0). The author intends to release the final version under a less restrictive license (such as CC BY 4.0).
+_Copyright &copy; 2026 **Oleksandr A. Shvets**_   
+**The draft paper(s)** is licensed under the Creative Commons **Attribution-NonCommercial** 4.0 International License.     
+The author intends to release the final version under a less restrictive license (such as **CC BY 4.0**).
