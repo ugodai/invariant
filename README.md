@@ -47,6 +47,7 @@
 │       S = Execute(D, S₀)    │
 └─────────────────────────────┘
 ```
+![Anathomy of Delta(d)](diagrams/anatomy-of-delta.png)
 
 ### Key Architectural Pillars
 
